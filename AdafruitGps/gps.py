@@ -1,6 +1,8 @@
-#Author:
-#Date:
-#Desc: UART1 (tx=p9.24 rx=p9.26)
+#!/usr/bin/env python3
+
+#Author: Paul Broome
+#Date: 4/14/22
+#Desc: Interfaces with Adafruit Ultimate gps connected to Beaglebone UART1 (tx=p9.24 rx=p9.26)
 
 
 import os										#For checking if data directory exists yet or not

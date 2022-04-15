@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 #Author: Paul Broome
 #Data 3/13/22
 #Description: Reads the gps output file and transmits the contents. This is done using
@@ -9,7 +11,7 @@ import serial 						#for serial IO
 import time							#for sleep()
 import os
 import Adafruit_BBIO.UART as UART
-import pylGpsApi as pyl
+import AdafruitGps.pylGpsApi as pyl
 
 def flashLed():
 	f = open("/sys/class/leds/beaglebone:green:usr0/brightness", "w")
