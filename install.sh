@@ -12,7 +12,7 @@ PAYLOAD_DIR=$(dirname $(readlink -e "$0"))
 
 
 #make payload script and helper scripts executable
-chmod 775 "$PAYLOAD_DIR/payload.sh" "$PAYLOAD_DIR/Misc/dimLeds.sh"
+chmod 775 "$PAYLOAD_DIR/payload.sh" "$PAYLOAD_DIR/uninstall.sh" "$PAYLOAD_DIR/Misc/dimLeds.sh"
 
 
 # create systemd for user services, if it does not already exist
@@ -21,7 +21,7 @@ mkdir -p "$USER_SERVICE_DIR"
 
 
 #create softlink to payload startup service
-ln -s "$PAYLOAD_DIR/Misc/payload-startup.service" "$USER_SERVICE_DIR"
+ln -f -s "$PAYLOAD_DIR/Misc/payload-startup.service" "$USER_SERVICE_DIR"
 
 
 #refresh the systemctl daemon so it will detect the new service
