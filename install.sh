@@ -15,6 +15,9 @@ PAYLOAD_DIR=$(dirname $(readlink -e "$0"))
 chmod 775 "$PAYLOAD_DIR/payload.sh" "$PAYLOAD_DIR/uninstall.sh" "$PAYLOAD_DIR/Misc/dimLeds.sh"
 
 
+#install python library dependencies
+pip3 install -r "$PAYLOAD_DIR/Misc/requirements.txt"
+
 # create systemd for user services, if it does not already exist
 USER_SERVICE_DIR="$HOME/.config/systemd/user"
 mkdir -p "$USER_SERVICE_DIR"
