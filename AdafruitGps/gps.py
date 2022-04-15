@@ -11,14 +11,25 @@ import time										#using sleep and current time to generate log files
 import math										#need modf()
 import Adafruit_BBIO.UART as UART		#To configure the multiplexed uart pins on beaglebone
 
-TELEMETRY_DIR = os.path.dirname(os.path.abspath(__file__))
-TELEMETRY_DATA_DIR = TELEMETRY_DIR + "/Data"
+GPS_DIR = os.path.dirname(os.path.abspath(__file__))
+GPS_DATA_DIR = GPS_DIR + "/Data"
 
 #files for logging data
-NMEA_FILE = TELEMETRY_DATA_DIR + "/nmea"
-COORDS_FILE = TELEMETRY_DATA_DIR + "/coords"
-TMP_FILE = TELEMETRY_DATA_DIR + "/tmp"
-POS_FILE = TELEMETRY_DATA_DIR + "/currentCoord"
+NMEA_FILE = GPS_DATA_DIR + "/nmea"
+COORDS_FILE = GPS_DATA_DIR + "/coords"
+TMP_FILE = GPS_DATA_DIR + "/tmp"
+POS_FILE = GPS_DATA_DIR + "/currentCoord"
+
+
+#function flashes beaglebone status led 1
+def flashLed():
+	f = open("/sys/class/leds/beaglebone:green:usr1/brightness", "w")
+	f.write("0")
+	f.flush()
+	time.sleep(0.1)
+	f.write("1")
+	f.close()
+
 
 
 #function converts a string in "ddmm.mmmm..." to "ddd.ddddddd" format
@@ -42,7 +53,7 @@ def nmeaToDecDeg(coord, dir):
 def initializeGPS():
 	print("initializeGPS() called")
 	UART.setup("UART1")
-	gps = serial.Serial("/dev/ttyO1", 9600)
+	gps = serial.Serial("/dev/ttyS1", 9600)
 	if(gps.isOpen()):
 		print("intializeGPS() configuring gps")
 		#PMTK_API_SET_NMEA_OUTPUT
@@ -63,10 +74,10 @@ def initializeGPS():
 def initializeEnv():
 	print("intitializeEnv() called")
 	#create data direcory for logging if it doenst already exist
-	if(not os.path.exists(TELEMETRY_DATA_DIR)):
+	if(not os.path.exists(GPS_DATA_DIR)):
 		print("intiializeEnv() data directory doesnt exist")
 		print("initializeEnv() creating data directory")
-		os.mkdir(TELEMETRY_DATA_DIR)
+		os.mkdir(GPS_DATA_DIR)
 	#create/clear the data in POS_FILE
 	f = open(POS_FILE, "w")
 	f.truncate()
@@ -96,6 +107,7 @@ coords_file = open(COORDS_FILE, "w")
 coords_log_file = open(COORDS_LOG_FILE, "w")
 while True:
 	try:
+		flashLed()
 		tmp_file = open(TMP_FILE, 'w')
 		nmea_string = gps.readline().decode("UTF-8")
 		nmea_file.write(nmea_string)

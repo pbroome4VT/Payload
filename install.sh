@@ -1,10 +1,9 @@
 #!/bin/bash
 #AUTHOR: PAUL BROOME
 #ROCKETRY@VT- PAYLOAD
-#Run after downloading. Will set up a startup service so Payload code will run after boot, and begins running the software.
-
-
-#MUST RUN AS ROOT!
+#Run after downloading the software.
+#script makes the payload script and other scripts executable and creates a startup
+# service for the payload software
 
 
 
@@ -12,17 +11,26 @@
 PAYLOAD_DIR=$(dirname $(readlink -e "$0"))
 
 
+#make payload script and helper scripts executable
+chmod 775 "$PAYLOAD_DIR/payload.sh" "$PAYLOAD_DIR/Misc/dimLeds.sh"
+
+
+# create systemd for user services, if it does not already exist
+USER_SERVICE_DIR="$HOME/.config/systemd/user"
+mkdir -p "$USER_SERVICE_DIR"
+
+
 #create softlink to payload startup service
-ln -s "$PAYLOAD_DIR/Misc/payload-startup.service" "/etc/systemd/system"
+ln -s "$PAYLOAD_DIR/Misc/payload-startup.service" "$USER_SERVICE_DIR"
 
 
 #refresh the systemctl daemon so it will detect the new service
-systemctl daemon-reload
+systemctl --user daemon-reload
 
 
 #enable the startup service. Means this will start at boot
-systemctl enable payload-startup.service
+systemctl --user enable payload-startup.service
 
 
 #start this service.
-systemctl start payload-startup.service
+systemctl --user start payload-startup.service

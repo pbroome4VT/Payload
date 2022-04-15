@@ -4,7 +4,9 @@ Description=Rocketry@VT Payload Startup Service
 [Service]
 #CHANGE!!! ExecStart must point to payload.sh, perhaps use the below line? Note only allowed one line of "ExecStart=..."
 #ExecStart=/home/debian/Payload/payload.sh
-ExecStart= /home/pbroome4/Payload/payload.sh
+ExecStart=/home/pbroome4/Payload/payload.sh
+ExecPost=/home/pbroome4/Misc/payloadPost.sh
+
 
 [Install]
 WantedBy=multi-user.target

@@ -26,11 +26,15 @@ def loraReadLine():
 	return lora.readline().decode("UTF-8").strip()
 
 
+
+
+
+flashLed()
 UART.setup("UART2") 				#tx = P9.21	rx = p9.22
 #setup serial connection on UART2 pins
 #/dev/ttyO2 is linux special file for serial UART2 comms
 #lora use uart 8N1
-lora = serial.Serial("/dev/ttyO2", 115200)
+lora = serial.Serial("/dev/ttyS2", 115200)
 if lora.is_open == False:
 	print("lora failed to open")
 
