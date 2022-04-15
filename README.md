@@ -1,5 +1,5 @@
-Necessary programs and files for the Rocketry@VT payload
-<more info>
+Rocketry@VT Payload Software 2022
+
 clone repository using git clone
 
 run install.sh as root
