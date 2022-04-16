@@ -2,6 +2,8 @@
 Description=Rocketry@VT Payload Startup Service
 
 [Service]
+Restart=always
+RestartSec=5
 #CHANGE!!! ExecStart must point to payload.sh, perhaps use the below 2 lines instead?"
 #ExecStart=/home/debian/Payload/payload.sh
 #ExecStop=/home/debian/Payload/Misc/execStop.sh
@@ -9,4 +11,4 @@ ExecStart=/home/pbroome4/Payload/payload.sh
 ExecStop=/home/pbroome4/Payload/Misc/execStop.sh
 
 [Install]
-WantedBy=multi-user.target
+WantedBy=default.target
