@@ -17,9 +17,9 @@ GPS_DATA_DIR = GPS_DIR + "/Data"
 #files for logging data
 NMEA_FILE = GPS_DATA_DIR + "/nmea"
 COORDS_FILE = GPS_DATA_DIR + "/coords"
-TMP_FILE = GPS_DATA_DIR + "/tmp"
-POS_FILE = GPS_DATA_DIR + "/currentCoord"
-
+TMP_FILE = GPS_DATA_DIR + "/tmp"					#temporary log file
+POS_FILE = GPS_DATA_DIR + "/currentCoord"		#logs gps reading
+logFile = open(GPS_DIR + "/log", "w")			#copy of stdout
 
 #function flashes beaglebone status led 1
 def flashLed():
@@ -29,6 +29,13 @@ def flashLed():
 	time.sleep(0.1)
 	f.write("1")
 	f.close()
+
+
+#splits stdout. prints to normal stdout and to a log file
+def Gps_print(string):
+	print(string)
+	logFile.write(string + "\n")
+	logFile.flush()
 
 
 
@@ -51,11 +58,11 @@ def nmeaToDecDeg(coord, dir):
 #serial class to this port
 #returns a pyserial serial class connection to the gps
 def initializeGPS():
-	print("initializeGPS() called")
+	Gps_print("initializeGPS() called")
 	UART.setup("UART1")
 	gps = serial.Serial("/dev/ttyS1", 9600)
 	if(gps.isOpen()):
-		print("intializeGPS() configuring gps")
+		Gps_print("intializeGPS() configuring gps")
 		#PMTK_API_SET_NMEA_OUTPUT
 		#output Global Positioning System Fixed Data (GGA) once per position fix
 		gps.write(b"$PMTK314,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0*29\r\n")
@@ -72,11 +79,11 @@ def initializeGPS():
 
 #creates log file data directory
 def initializeEnv():
-	print("intitializeEnv() called")
+	Gps_print("intitializeEnv() called")
 	#create data direcory for logging if it doenst already exist
 	if(not os.path.exists(GPS_DATA_DIR)):
-		print("intiializeEnv() data directory doesnt exist")
-		print("initializeEnv() creating data directory")
+		Gps_print("intiializeEnv() data directory doesnt exist")
+		Gps_print("initializeEnv() creating data directory")
 		os.mkdir(GPS_DATA_DIR)
 	#create/clear the data in POS_FILE
 	f = open(POS_FILE, "w")
@@ -133,11 +140,11 @@ while True:
 				tmp_file.write(lat + "," + lon + "," + alt + "\n")
 				tmp_file.flush()
 				os.replace(TMP_FILE, POS_FILE)
-				print(lat, lon, alt)
+				Gps_print(lat + ", " + lon + ", " + alt)
 			else:
 				tmp_file.write("-1,-1,-1")
 				tmp_file.flush()
 				os.replace(TMP_FILE, POS_FILE)
-				print("Looking for fix")
+				Gps_print("Looking for fix")
 	except Exception as e:
-		print(e)
+		Gps_print(str(e))

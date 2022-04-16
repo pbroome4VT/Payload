@@ -2,8 +2,10 @@
 Description=Rocketry@VT Payload Startup Service
 
 [Service]
+#if service finishes [not including manually stopping the service], restat after 10 sec
 Restart=always
-RestartSec=5
+RestartSec=10
+
 #CHANGE!!! ExecStart must point to payload.sh, perhaps use the below 2 lines instead?"
 #ExecStart=/home/debian/Payload/payload.sh
 #ExecStop=/home/debian/Payload/Misc/execStop.sh

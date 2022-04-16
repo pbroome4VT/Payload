@@ -7,11 +7,23 @@
 #	to recieve the data, need a lora tranciever on network 6 with ID #2. These choice are all
 #	harcoded but easily configuarable
 
+import sys
 import serial 						#for serial IO
 import time							#for sleep()
 import os
 import Adafruit_BBIO.UART as UART
 import AdafruitGps.pylGpsApi as pyl
+
+
+TELEMETRY_DIR = os.path.dirname(os.path.abspath(__file__))
+logFile = open(TELEMETRY_DIR + "/log", "w")
+
+
+def Tele_print(string):
+	print(string)
+	logFile.write(string + "\n")
+	logFile.flush()
+
 
 def flashLed():
 	f = open("/sys/class/leds/beaglebone:green:usr0/brightness", "w")
@@ -26,9 +38,6 @@ def loraReadLine():
 	return lora.readline().decode("UTF-8").strip()
 
 
-
-
-
 flashLed()
 UART.setup("UART2") 				#tx = P9.21	rx = p9.22
 #setup serial connection on UART2 pins
@@ -36,20 +45,20 @@ UART.setup("UART2") 				#tx = P9.21	rx = p9.22
 #lora use uart 8N1
 lora = serial.Serial("/dev/ttyS2", 115200)
 if lora.is_open == False:
-	print("lora failed to open")
+	Tele_print("lora failed to open")
 
 
 #assign transmitter to network #6
 lora.write("AT+NETWORKID=6\r\n".encode())
-print("AT+NETWORKID=6: ", loraReadLine())
+Tele_print("AT+NETWORKID=6: " + loraReadLine())
 
 #assign transmitter ID #1
 lora.write("AT+ADDRESS=1\r\n".encode())
-print("AT+ADDRESS=1: ", loraReadLine())
+Tele_print("AT+ADDRESS=1: " + loraReadLine())
 
 #assign lora parameters
 lora.write("AT+PARAMETER=12,4,1,7\r\n".encode())
-print("AT+PARAMETER=12,4,1,7: ", loraReadLine())
+Tele_print("AT+PARAMETER=12,4,1,7: " + loraReadLine())
 
 
 while True:
@@ -57,5 +66,5 @@ while True:
 	if (not data == ""):
 		command = "AT+SEND=2," + str(len(data)) + "," + data + "\r\n"
 		lora.write(command.encode())
-		print(command.strip(),": ", loraReadLine())
+		Tele_print(command.strip() + ": " + loraReadLine())
 		flashLed()
