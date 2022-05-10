@@ -1,17 +1,20 @@
 #!/bin/bash
-#AUTHOR: PAUL BROOME
-#ROCKETRY@VT- PAYLOAD
-#Run after downloading the software.
-#script makes the payload script and other scripts executable and creates a startup
+# AUTHOR: PAUL BROOME
+# ROCKETRY@VT- PAYLOAD
+# Run after downloading the software.
+# script makes the payload script and other scripts executable and creates a startup
 # service for the payload software
 
 
 # Absolute path to Payload directory: Finds the absolute path of the directory containing this file
 PAYLOAD_DIR=$(dirname $(readlink -e "$0"))
 
+# CD so we can user relative paths
+cd $PAYLOAD_DIR
 
-#make payload script and helper scripts executable
-chmod 775 "$PAYLOAD_DIR/payload.sh" "$PAYLOAD_DIR/uninstall.sh" "$PAYLOAD_DIR/Misc/dimLeds.sh"
+
+# make payload script and helper scripts executable
+chmod 775 "./payload.sh" "./uninstall.sh" "./Misc/dimLeds.sh"
 
 
 # install python library dependencies
@@ -22,8 +25,8 @@ USER_SERVICE_DIR="$HOME/.config/systemd/user"
 mkdir -p "$USER_SERVICE_DIR"
 
 
-#create softlink to payload startup service
-ln -f -s "$PAYLOAD_DIR/Misc/payload-startup.service" "$USER_SERVICE_DIR"
+# create softlink to payload startup service
+ln -f -s "./Misc/payload-startup.service" "$USER_SERVICE_DIR"
 
 
 # refresh the systemctl daemon so it will detect the new service

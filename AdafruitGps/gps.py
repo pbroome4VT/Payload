@@ -60,8 +60,8 @@ def nmeaToDecDeg(coord, dir):
 def initializeGPS():
 	Gps_print("initializeGPS() called")
 	UART.setup("UART1")
-	gps = serial.Serial("/dev/ttyS1", 9600)
-	if(gps.isOpen()):
+	gps = serial.Serial(port="/dev/ttyS1", baudrate=9600, write_timeout=2)
+	if(gps.is_open):
 		Gps_print("intializeGPS() configuring gps")
 		#PMTK_API_SET_NMEA_OUTPUT
 		#output Global Positioning System Fixed Data (GGA) once per position fix
