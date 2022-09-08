@@ -38,6 +38,7 @@ def loraReadLine():
 	return lora.readline().decode("UTF-8").strip()
 
 
+Tele_print("Transmitter Called")
 flashLed()
 UART.setup("UART2") 				#tx = P9.21	rx = p9.22
 #setup serial connection on UART2 pins

@@ -26,7 +26,7 @@ mkdir -p "$USER_SERVICE_DIR"
 
 
 # create softlink to payload startup service
-ln -f -s "./Misc/payload-startup.service" "$USER_SERVICE_DIR"
+ln -f -s "$PAYLOAD_DIR/Misc/payload-startup.service" "$USER_SERVICE_DIR"
 
 
 # refresh the systemctl daemon so it will detect the new service

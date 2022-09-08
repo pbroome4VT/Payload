@@ -129,6 +129,7 @@ while True:
 			lon = nmea_string[4]
 			ew = nmea_string[5] #east/west
 			fix = nmea_string[6]
+			sats = nmea_string[7]
 			alt = nmea_string[9]
 			if (fix != "0"):							#if packet has data
 				lat = nmeaToDecDeg(lat, ns)
@@ -146,5 +147,6 @@ while True:
 				tmp_file.flush()
 				os.replace(TMP_FILE, POS_FILE)
 				Gps_print("Looking for fix")
+				Gps_print(sats + " satelites used")
 	except Exception as e:
 		Gps_print(str(e))
