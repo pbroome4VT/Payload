@@ -14,7 +14,7 @@ cd $PAYLOAD_DIR
 
 
 # make payload script and helper scripts executable
-chmod 775 "./payload.sh" "./uninstall.sh" "./Misc/dimLeds.sh"
+chmod 775 "./payload.py" "./uninstall.sh"
 
 
 # install python library dependencies
@@ -36,10 +36,11 @@ systemctl --user daemon-reload
 # enable the startup service. Means this will start at boot
 systemctl --user enable payload-startup.service
 
+# this allows the user service to run even when user is not logged in. Without this, service only start after login
+sudo loginctl enable-linger $USER
 
 # start this service.
 systemctl --user start payload-startup.service
 
 
-# this allows the user service to run even when user is not logged in. Without this, service only start after login
-sudo loginctl enable-linger $USER
+

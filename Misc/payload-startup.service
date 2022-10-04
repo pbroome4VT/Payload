@@ -2,15 +2,13 @@
 Description=Rocketry@VT Payload Startup Service
 
 [Service]
-#if service finishes [not including manually stopping the service], restat after 10 sec
+#if service finishes [not including manually stopping the service], restart after 10 sec
 Restart=always
 RestartSec=10
 
 #CHANGE!!! ExecStart must point to payload.sh, perhaps use the below 2 lines instead?"
-#ExecStart=/home/debian/Payload/payload.sh
+ExecStart=/home/debian/Payload/payload.py
 #ExecStop=/home/debian/Payload/Misc/execStop.sh
-ExecStart=/home/pbroome4/Payload/payload.sh
-ExecStop=/home/pbroome4/Payload/Misc/execStop.sh
 
 [Install]
 WantedBy=default.target
