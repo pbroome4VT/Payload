@@ -18,7 +18,7 @@ chmod 775 "./payload.py" "./uninstall.sh"
 
 
 # install python library dependencies
-#pip3 install -r "$PAYLOAD_DIR/Misc/requirements.txt"
+pip3 install -r "$PAYLOAD_DIR/Misc/requirements.txt"
 
 # create systemd for user services, if it does not already exist
 USER_SERVICE_DIR="$HOME/.config/systemd/user"
