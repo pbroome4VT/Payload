@@ -8,5 +8,5 @@ rm "$HOME/.config/systemd/user/payload-startup.service"
 
 #remove all software files
 PAYLOAD_DIR=$(dirname $(readlink -e "$0"))
-rm -f -R "$PAYLOAD_DIR/*"
+rm -f -R "$PAYLOAD_DIR"
 
