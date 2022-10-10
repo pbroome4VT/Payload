@@ -1,10 +1,21 @@
 #!/usr/bin/env python3
 import time
+import signal
 from Gps import gps
 from Imu import imu
+from Telemetry import telemetry
+from Piezzo import piezzo
+
+def interrupt_handler():
+    #print("interrupted")
+    #piezzo.disable()
+    pass
 
 #turn off all onboard leds
 def setup():
+    #initialize the SIGTERM handler for gracefully stopping the process
+    #signal.signal(signal.SIGINT, interrupt_handler)
+    #signal.signal(signal.SIGTERM, interrupt_handler)
     file = open("/sys/class/leds/beaglebone:green:usr0/trigger", "w")
     file.write("none")
     file.close()
@@ -30,12 +41,12 @@ def setup():
     file.write("0")
     file.close()
 
-
 def fsm():
     #print("FSM called")
-    gps.gps()
-    imu.imu()
-    print(str(gps.get_latitude()) + "  " + str(gps.get_longitude()) + " " + str(gps.get_altitude()))
+    #gps.gps()
+    #imu.imu()
+    telemetry.telemetry()
+    #print(str(gps.get_latitude()) + "  " + str(gps.get_longitude()) + " " + str(gps.get_altitude()))
     #time.sleep(0.25)
 
 
@@ -44,6 +55,8 @@ def run():
     setup()
     gps.initialize()
     imu.initialize()
+    telemetry.initialize()
+    piezzo.initialize()
     while 1:
         fsm()
     

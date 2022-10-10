@@ -34,6 +34,9 @@ and installed by runnning
 pip3 must be installed and is likely not installed on the beaglebone by default. To install, run
 
 > sudo apt-get install python3-pip
+
+hdmi audio and video cape must be disabled in the /boot/uEnv.txt file in order to use
+UART5 for the tranciever
  
 ### Payload Software
 Install the payload software by entering
