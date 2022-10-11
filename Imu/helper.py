@@ -74,9 +74,7 @@ def initialize_environment():
     f.close()
 
 
-def initialize_IMU():
-    print("initialize_IMU()")
-    
+def initialize_IMU():    
     #configure spi0 pins
     os.system("config-pin p9.17 spi_cs > /dev/null")
     os.system("config-pin p9.18 spi > /dev/null")
@@ -95,7 +93,7 @@ def initialize_IMU():
     spi.threewire = False   #using four wire spi
 
     #read and print from the "whoami" register 0x0F.  value is read only 01101011
-    imu_print("whoami = " + hex(spi.xfer2([0b10001111, 0])[1]))
+    #imu_print("whoami = " + hex(spi.xfer2([0b10001111, 0])[1]))
 
     #configure to imu to ouput acceleration data at 52hz with +-16g's full scale
     dataBytes = [c.CTRL1_XL_ODR_52 | c.CTRL1_XL_FS_16G]
@@ -157,7 +155,7 @@ def record_accelerometer():
     #convert bits to g's
     xyzAccel = numpy.array([xAccel, yAccel, zAccel], dtype=numpy.int16)
     xyzAccelG = [0]*3
-    for i in range(0,2):
+    for i in range(0,3):
         xyzAccelG[i] = xyzAccel[i] * c.ACCELEROMETER_SENSITIVTY_16 / 1000
     accelerometerFile.write(str(xyzAccelG)+"\n")
     global currentXYZAcceleration

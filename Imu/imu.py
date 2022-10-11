@@ -15,7 +15,7 @@ def get_temperature():
 def get_acceleration():
     return h.currentXYZAcceleration
 
-def get_degreesPerSecond():
+def get_degrees_per_second():
     return h.currentXYZDPS
 
 

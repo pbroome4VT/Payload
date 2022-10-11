@@ -31,10 +31,23 @@ def set_frequency(newFrequency):
 
 def enable():
     global initialized
+    global enabled
     if (initialized):
         pwm.start(c.PIEZZO_CHANNEL, dutyCycle, frequency, polarity = 0)
+        enabled = 1
 
 def disable():
     global initialized
+    global enabled
     if(initialized):
         pwm.stop(c.PIEZZO_CHANNEL)
+        enabled = 0
+
+def toggle():
+    global intialized
+    global enabled
+    if(enabled == 0):
+        enable()
+    else:
+        disable()
+        

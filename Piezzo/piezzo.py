@@ -15,6 +15,9 @@ def enable():
 def disable():
     h.disable()
 
+def toggle():
+    h.toggle()
+    
 def set_frequency(newFrequency):
     h.set_frequency(newFrequency)
 
