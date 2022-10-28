@@ -4,10 +4,8 @@
 #outputs pwm signal to make sound via piezzo buzzer. 
 #uses pwm channel pwm1a on pin P9.14
 
-
-from Piezzo import helper as h
-from Piezzo import constants as c
-
+import Sound.Speaker.constants as c
+import Sound.Speaker.helper as h
 
 def enable():
     h.enable()
@@ -23,14 +21,16 @@ def set_frequency(newFrequency):
 
 def get_frequency():
     return h.frequency
-    
+
+def is_initialized():
+    return h.initialized == True
+
 def initialize():
-    h.initialize_Env()
-    h.initialize_Piezzo()
-    pass
+    if(h.initialized == False):
+        h.initialize_Env()
+        h.initialize_Speaker()
 
 
-def piezzo():
-    h.piezzo()
+def speaker():
     pass
 

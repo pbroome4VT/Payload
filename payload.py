@@ -6,24 +6,26 @@ import os
 from Gps import gps
 from Imu import imu
 from Telemetry import telemetry
-from Piezzo import piezzo
+from Sound import sound 
 from Timer import timer
-
+import helper as h
 #----------------------------------------------------------
 #constants
-TELEMETRY_DELTA_T = 1.0       #(seconds)  transmit once per second
-PIEZZO_DELTA_T = 1.0          #(seconds)  cycle the piezzo buzzer once per second
-STDOUT_DELTA_T = 1.0          #(second)   period at which data is output to console
+TELEMETRY_DELTA_T = 50.0       #(seconds)  transmit once per second
+SENSOR_DELTA_T = 50.0
+PIEZZO_DELTA_T = 50.0          #(seconds)  cycle the piezzo buzzer once per second
+STDOUT_DELTA_T = 50.0          #(second)   period at which data is output to console
 #-----------------------------------------------------------
 #global variables
 telemetryTimer = None
+sensorTimer = None
 piezzoTimer = None
 stdoutTimer = None
 
 
 def interrupt_handler(signal, frame):
-    print("interrupted")
-    piezzo.disable()
+    print("SIGINT")
+    sound.destroy()
     sys.exit(0)
 
 #turn off all onboard leds
@@ -40,30 +42,31 @@ def setup():
     os.system("echo \"0\" > /sys/class/leds/beaglebone:green:usr0/brightness")
     #configure global timer variables
     global telemetryTimer
-    global piezzoTimer
+    global sensorTimer
     global stdoutTimer
     telemetryTimer = timer.Timer(TELEMETRY_DELTA_T)
-    piezzoTimer = timer.Timer(PIEZZO_DELTA_T/2)
+    sensorTimer = timer.Timer(SENSOR_DELTA_T)
     stdoutTimer = timer.Timer(STDOUT_DELTA_T)
 
 stdout_num = 0
 def fsm():
     global telemetryTimer
-    global piezzoTimer
     global stdoutTimer
     
     #print("FSM called")
-    gps.gps()
-    imu.imu()
-    telemetry.telemetry()
-    if(piezzoTimer.is_expired()):
-        piezzo.toggle()
-        #piezzo.disable()
-        piezzoTimer.reset()
+    timer.Timer.update()    #update all timers
+    sound.sound()
     if(telemetryTimer.is_expired()):
+        pass
         telemetry.transmit("hello world")
         telemetryTimer.reset()
+    if(sensorTimer.is_expired()):
+        pass
+        gps.gps()
+        imu.imu()
+        telemetry.telemetry()
     if(stdoutTimer.is_expired()):
+        pass
         global stdout_num
         print("-------------------------------")
         print("OUTPUT #" + str(stdout_num))
@@ -74,14 +77,15 @@ def fsm():
         stdout_num = stdout_num + 1
         stdoutTimer.reset()
 
-    
+
 def run():
     print("Run called")
     setup()
     gps.initialize()
     imu.initialize()
     telemetry.initialize()
-    piezzo.initialize()
+    sound.initialize()
+    sound.play_song()
     while 1:
         fsm()
     

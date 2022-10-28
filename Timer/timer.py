@@ -2,13 +2,17 @@ import time
 
 
 class Timer:
-    
+    currentTime = 0     #static time variable
     def __init__(self, elapsed_time):
         self.elapsedTime = elapsed_time
-        self.startTime = time.time()
+        self.startTime = self.currentTime
+    
+    @staticmethod
+    def update():
+        Timer.currentTime = time.time()
     
     def start(self):
-        self.startTime = time.time()
+        self.startTime = self.currentTime
 
     def reset(self):
         self.start()
@@ -17,4 +21,4 @@ class Timer:
         self.elapsedTime = elapsedTime
 
     def is_expired(self):
-        return time.time() - self.startTime > self.elapsedTime
+        return self.currentTime - self.startTime > self.elapsedTime

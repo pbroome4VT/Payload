@@ -13,5 +13,5 @@ LOG_FILE = GPS_DIR + "/log"
 GPS_LED_DIR = "/sys/class/leds/beaglebone:green:usr1"
 
 
-READ_TIMEOUT = 50/1000  #seconds
+READ_TIMEOUT = 0/1000  #seconds
 

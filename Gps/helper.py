@@ -110,7 +110,8 @@ def read_gps():
             rawFile.flush()
             return rawString
     except Exception as e:
-        gps_print(str(e))
+        pass
+        #gps_print(str(e))
     return ""
 
 #pmtk command is of the form "$<data>*<checksum>" where checksum is a hexadecimal string
@@ -145,7 +146,7 @@ def initialize_GPS():
     #gps_print("initializeGPS() called")
     UART.setup("UART1")
     global gps
-    gps = serial.Serial(port="/dev/ttyS1", baudrate=9600, timeout=c.READ_TIMEOUT, write_timeout=0.3)
+    gps = serial.Serial(port="/dev/ttyS1", baudrate=9600, timeout=c.READ_TIMEOUT, write_timeout=c.READ_TIMEOUT)
     if(gps.is_open):
         #gps_print("Gps.intialize_GPS() initializing adafruit gps")
         
@@ -307,7 +308,8 @@ def gps_helper():
         elif(is_pgtop(rawTokens)):
             parse_pgtop(rawTokens)
         elif(len(rawTokens) > 0 and rawTokens[0] != ""):
-            gps_print(str(rawTokens))
+            pass
+            #gps_print(str(rawTokens))
         else:
             #break the loop if read timout occured
             #gps_print("read timout")
