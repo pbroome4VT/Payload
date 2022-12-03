@@ -5,11 +5,7 @@ import time
 
 songTimer = None
 songEn = 0
-Thunderstruck = song.Song(c.THUNDERSTRUCK_NOTES, c.THUNDERSTRUCK_BPM)
-FinalCountdown = song.Song(c.FINAL_COUNTDOWN_NOTES, c.FINAL_COUNTDOWN_BPM)
-song = FinalCountdown
-
-
+currSong = None
 
 def initialize():
     global songTimer
@@ -21,25 +17,29 @@ def initialize():
 def destroy():
     speaker.disable()
 
-def play_song():
+def play_song(s):
     global songEn
-    global song
+    global currSong
+    currSong = s
     songEn = 1
-    song.start()
+    currSong.start()
 
 def stop_song():
     global songEn
     songEn = 0
+    speaker.disable()
 
 def sound():
     global songEn
-    global song
+    global currSong
     if(songEn):
-        changedNote = song.update()
-        if(changedNote):
-            speaker.set_frequency(1)
-            time.sleep(0.01)
-            speaker.set_frequency(song.current_note())
-        
+        changedNote = currSong.update()
+        if(not currSong.song_over()):
+            if(changedNote):
+                speaker.set_frequency(1)
+                time.sleep(0.01)
+                speaker.set_frequency(currSong.current_note())
+        else:
+            stop_song()
 
 

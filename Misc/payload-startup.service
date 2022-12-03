@@ -1,14 +1,13 @@
 [Unit]
 Description=Rocketry@VT Payload Startup Service
 
+
 [Service]
+Type=simple
 #if service finishes [not including manually stopping the service], restart after 10 sec
 Restart=always
 RestartSec=10
-
-#CHANGE!!! ExecStart must point to payload.sh, perhaps use the below 2 lines instead?"
 ExecStart=/home/debian/Payload/payload.py
-
 
 [Install]
 WantedBy=default.target

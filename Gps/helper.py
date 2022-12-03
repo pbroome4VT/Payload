@@ -8,7 +8,7 @@ import re                                       #regexp for tokenizing sentences
 import Gps.constants as c
 from Gps.svDataClassFile import SvData
 
-#gps module global constants
+#gps module global variables
 #-------------
 #files
 logFile = None              #copy of stdout
@@ -21,7 +21,7 @@ gps = None                      #serial gps object
 led = 0
 #-------------------------------------------
 #pgtop sentence status vars
-externalAntennaEnabled=None   #boolean of whether gps is using external or internal antenna
+externalAntennaStatus=None   #boolean of whether gps is using external or internal antenna
 #-------------------------------------------
 #gga sentence status vars
 gpsHasFix = False               #boolean of whether gps has locked on location
@@ -39,7 +39,8 @@ currentHDOP = None
 #each space vehicle in gsv sentence gets unique "Satelite id" number. For gnss satelites this is equivaltent to the prn number
 #for SBAS and other satelites there are some offsets. long story short the gsv sentence outputs unique number between [1, 96] to identify satelite
 #this array will index these id's and leave index 0 as None
-spaceVehiclesData = [None] * 97 
+spaceVehiclesData = [None] * 97
+numSpaceVehiclesVisible = 0
 #------------------------------------------------------------------------------------
 
 #prints to stdout and a log file
@@ -138,7 +139,8 @@ def send_gps(commandStr, dataStr):
     rawFile.write(">" + commandStr)
     rawFile.flush()
     return commandStr.strip()
-    
+
+
 #function initializes the adafruit gps. Enables Beaglebone uart1 pins and creates pyserial
 #serial class to this port LOG_FILELOG_FILE
 #returns a pyserial serial class connection to the gps
@@ -146,7 +148,7 @@ def initialize_GPS():
     #gps_print("initializeGPS() called")
     UART.setup("UART1")
     global gps
-    gps = serial.Serial(port="/dev/ttyS1", baudrate=9600, timeout=c.READ_TIMEOUT, write_timeout=c.READ_TIMEOUT)
+    gps = serial.Serial(port="/dev/ttyS1", baudrate=9600, timeout=c.READ_TIMEOUT, write_timeout=c.WRITE_TIMEOUT)
     if(gps.is_open):
         #gps_print("Gps.intialize_GPS() initializing adafruit gps")
         
@@ -202,13 +204,13 @@ def is_pgtop(rawTokens):
     rawTokens[0][0:7] == "$PGTOP")
 
 def is_gga(rawTokens):
-    return (len(rawTokens) > 0 and
-    len(rawTokens[0]) >= 6 and
+    return (len(rawTokens) == 16 and
+    len(rawTokens[0]) == 6 and
     rawTokens[0][0:7] == "$GPGGA")
 
 def is_gsa(rawTokens):
-    return (len(rawTokens) > 0 and
-    len(rawTokens[0]) >= 6 and
+    return (len(rawTokens) == 19 and
+    len(rawTokens[0]) == 6 and
     rawTokens[0][0:7] == "$GPGSA")
 
 def is_gsv(rawTokens):
@@ -221,16 +223,16 @@ def parse_pmtk(pmtkTokens):
 
 def parse_pgtop(pgtopTokens):
     if(pgtopTokens[1] == "11"):
-        antennaStatus = pgtopTokens[2]
-        global externalAntennaEnabled
-        if(externalAntennaEnabled != antennaStatus):
-            if(antennaStatus == "1"):
+        antennaStatus = int(pgtopTokens[2])
+        global  externalAntennaStatus
+        if( externalAntennaStatus != antennaStatus):
+            if(antennaStatus == c.ANTENNA_SHORTED):
                 gps_print("ACTIVE ANTENNA IS SHORTED")
-            elif(antennaStatus == "2"):
+            elif(antennaStatus == c.ANTENNA_INTERNAL):
                 gps_print("SWITCH TO INTERNAL ANTENNA")
-            elif(antennaStatus == "3"):
+            elif(antennaStatus == c.ANTENNA_EXTERNAL):
                 gps_print("SWITCH TO EXTERNAL ANTENNA")
-        externalAntennaEnabled = antennaStatus
+        externalAntennaStatus = antennaStatus
             
 def parse_gga(gpggaTokens):
     utc_time = gpggaTokens[1]
@@ -279,6 +281,7 @@ def parse_gsv(gpgsvTokens):
 
     numSvInSentence = int((len(gpgsvTokens) - 5)/4)  #five token fields are unrelated to specific sv. each sv has 4 tokens. therefore this is the number of sv's contained in this sentence
     global spaceVehiclesData
+    currTime = time.time()
     for i in range (0, numSvInSentence):
         svStartingIndex = 4 + 4*i       #index in sentence of first field of this sv
         satID = int(gpgsvTokens[svStartingIndex])
@@ -290,6 +293,7 @@ def parse_gsv(gpgsvTokens):
         spaceVehiclesData[satID].elevation = elevation
         spaceVehiclesData[satID].azimuth = azimuth
         spaceVehiclesData[satID].snr = snr
+        spaceVehiclesData[satID].lastComm = currTime
            
     
 def gps_helper():

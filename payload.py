@@ -6,21 +6,24 @@ import os
 from Gps import gps
 from Imu import imu
 from Telemetry import telemetry
-from Sound import sound 
+from Battery import battery
+from Sound import sound
+from Sound import song
+from Sound.Speaker import speaker 
 from Timer import timer
 import helper as h
 #----------------------------------------------------------
 #constants
-TELEMETRY_DELTA_T = 50.0       #(seconds)  transmit once per second
-SENSOR_DELTA_T = 50.0
-PIEZZO_DELTA_T = 50.0          #(seconds)  cycle the piezzo buzzer once per second
-STDOUT_DELTA_T = 50.0          #(second)   period at which data is output to console
+TELEMETRY_DELTA_T = 3.0       #(seconds)  period at which data is transmitted
+SENSOR_DELTA_T = 1.0  
+STDOUT_DELTA_T = 10.0          #(second)   period at which data is output to console
 #-----------------------------------------------------------
 #global variables
 telemetryTimer = None
 sensorTimer = None
 piezzoTimer = None
 stdoutTimer = None
+
 
 
 def interrupt_handler(signal, frame):
@@ -48,35 +51,50 @@ def setup():
     sensorTimer = timer.Timer(SENSOR_DELTA_T)
     stdoutTimer = timer.Timer(STDOUT_DELTA_T)
 
-stdout_num = 0
+stdoutNum = 0
+noFixCtr = 0
+
 def fsm():
     global telemetryTimer
     global stdoutTimer
     
     #print("FSM called")
     timer.Timer.update()    #update all timers
-    sound.sound()
     if(telemetryTimer.is_expired()):
         pass
-        telemetry.transmit("hello world")
+        global noFixCtr
+        msg = ""
+        if(gps.has_fix()):
+            noFixCtr = 0
+            msg = gps.get_position_str()
+        else:
+            msg = "no fix: " + str(noFixCtr)
+            noFixCtr = noFixCtr + 1
+        telemetry.transmit(msg)
+        print("SENT: " + msg)
         telemetryTimer.reset()
     if(sensorTimer.is_expired()):
         pass
         gps.gps()
         imu.imu()
         telemetry.telemetry()
+        sensorTimer.reset()
     if(stdoutTimer.is_expired()):
         pass
-        global stdout_num
+        global stdoutNum
         print("-------------------------------")
-        print("OUTPUT #" + str(stdout_num))
-        print("Position:  " + str(gps.get_latitude()) + "  " + str(gps.get_longitude()) + " " + str(gps.get_altitude()))
+        print("OUTPUT #" + str(stdoutNum))
+        print("Position:  " + gps.get_position_str())
+        print("Num Satelites:  " + str(gps.get_num_satelites()))
+        print("gps antenna:  " + gps.get_antenna_str())
         print("Temperature:  " + str(imu.get_temperature()))
         print("dps<x,y,z>:  " + str(imu.get_degrees_per_second()))
         print("accel<x,y,z>g's:  " + str(imu.get_acceleration()))
-        stdout_num = stdout_num + 1
+        print("battery voltage:  " + str(round(battery.get_voltage(), 3)) + "V")
+        print("------------------------------")
+        stdoutNum = stdoutNum + 1
         stdoutTimer.reset()
-
+    sound.sound()
 
 def run():
     print("Run called")
@@ -84,8 +102,9 @@ def run():
     gps.initialize()
     imu.initialize()
     telemetry.initialize()
+    battery.initialize()
     sound.initialize()
-    sound.play_song()
+    sound.play_song(sound.startupSound)
     while 1:
         fsm()
     

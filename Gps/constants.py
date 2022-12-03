@@ -14,4 +14,9 @@ GPS_LED_DIR = "/sys/class/leds/beaglebone:green:usr1"
 
 
 READ_TIMEOUT = 0/1000  #seconds
+WRITE_TIMEOUT = 0/1000 #seconds
+
+ANTENNA_SHORTED = 1
+ANTENNA_INTERNAL = 2
+ANTENNA_EXTERNAL = 3
 
