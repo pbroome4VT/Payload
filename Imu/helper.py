@@ -39,16 +39,6 @@ def write_register(register, bytes):
     data = spi.xfer2(bytes)
     return data
 
-def flash_led():
-    f = open(c.IMU_LED_DIR + "/brightness", "w")
-    global led
-    if led == 0:
-        f.write("1")
-        led = 1
-    else:
-        f.write("0")
-        led = 0
-
 def initialize_environment():
     #print("imu initialize_environment() called")
 
@@ -164,7 +154,6 @@ def record_accelerometer():
 
 
 def imu():
-    flash_led()
     record_temperature()
     record_accelerometer()
     record_gyroscope()

@@ -28,7 +28,7 @@ def initialize_telemetry():
         time.sleep(0.1)
         #tranceiver.write(b"ATS9=916,000\r") # set register9 (max freq) to 916 Mhz
         time.sleep(0.1)
-        #tranceiver.write(b"ATS4=10\r") #set register 4(tx power) to 20db
+        tranceiver.write(b"ATS4=30\r") #set register 4(tx power) to 20db
         time.sleep(0.1)
         tranceiver.write(b"AT&W\r") #write parameters
         time.sleep(0.1)

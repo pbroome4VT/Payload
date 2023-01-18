@@ -24,8 +24,18 @@ sensorTimer = None
 piezzoTimer = None
 stdoutTimer = None
 
+led = 0
 
-
+def flash_led():
+    global led
+    if (led == 0):
+        f = open("/sys/class/leds/beaglebone:green:usr0" + "/brightness", "w")
+        f.write("1")
+        led = 1
+    else:
+        f = open("/sys/class/leds/beaglebone:green:usr0" + "/brightness", "w")
+        f.write("0")
+        led = 0
 def interrupt_handler(signal, frame):
     print("SIGINT")
     sound.destroy()
@@ -61,35 +71,41 @@ def fsm():
     #print("FSM called")
     timer.Timer.update()    #update all timers
     if(telemetryTimer.is_expired()):
-        pass
-        global noFixCtr
-        msg = ""
-        if(gps.has_fix()):
-            noFixCtr = 0
-            msg = gps.get_position_str()
-        else:
-            msg = "no fix: " + str(noFixCtr)
-            noFixCtr = noFixCtr + 1
-        telemetry.transmit(msg)
-        print("SENT: " + msg)
-        telemetryTimer.reset()
+        if(telemetry.is_initialized()):
+            global noFixCtr
+            msg = ""
+            if(gps.has_fix()):
+                noFixCtr = 0
+                msg = gps.get_position_str()
+            else:
+                msg = "no fix: " + str(noFixCtr)
+                noFixCtr = noFixCtr + 1
+            telemetry.transmit(msg)
+            print("SENT: " + msg)
+            telemetryTimer.reset()
     if(sensorTimer.is_expired()):
-        pass
+        flash_led()
         gps.gps()
         imu.imu()
         telemetry.telemetry()
         sensorTimer.reset()
     if(stdoutTimer.is_expired()):
-        pass
         global stdoutNum
         print("-------------------------------")
         print("OUTPUT #" + str(stdoutNum))
-        print("Position:  " + gps.get_position_str())
-        print("Num Satelites:  " + str(gps.get_num_satelites()))
-        print("gps antenna:  " + gps.get_antenna_str())
-        print("Temperature:  " + str(imu.get_temperature()))
-        print("dps<x,y,z>:  " + str(imu.get_degrees_per_second()))
-        print("accel<x,y,z>g's:  " + str(imu.get_acceleration()))
+        if(gps.is_connected()):
+            if(gps.is_initialized()):        
+                print("     Position:  " + gps.get_position_str())
+                print("     Num Satelites:  " + str(gps.get_num_satelites()))
+                print("     gps antenna:  " + gps.get_antenna_str())
+            else:
+                print("GPS not initialized")
+        else:
+            print("GPS NOT CONNECTED")
+        print("IMU initialized: " + str(imu.is_initialized()))
+        print("     Temperature:  " + str(imu.get_temperature()))
+        print("     dps<x,y,z>:  " + str(imu.get_degrees_per_second()))
+        print("     accel<x,y,z>g's:  " + str(imu.get_acceleration()))
         print("battery voltage:  " + str(round(battery.get_voltage(), 3)) + "V")
         print("------------------------------")
         stdoutNum = stdoutNum + 1
@@ -99,11 +115,11 @@ def fsm():
 def run():
     print("Run called")
     setup()
-    gps.initialize()
-    imu.initialize()
-    telemetry.initialize()
-    battery.initialize()
     sound.initialize()
+    battery.initialize()
+    gps.gps()
+    imu.imu()
+    telemetry.telemetry()
     sound.play_song(sound.startupSound)
     while 1:
         fsm()

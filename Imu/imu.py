@@ -9,6 +9,8 @@
 from Imu import helper as h
 from Imu import constants as c
 
+initialized = False
+
 def get_temperature():
     return h.currentTemperature
 
@@ -18,11 +20,20 @@ def get_acceleration():
 def get_degrees_per_second():
     return h.currentXYZDPS
 
+def is_initialized():
+    global initialized
+    return initialized
 
 def initialize():
     h.initialize_environment()
-    h.initialize_IMU()
+    return h.initialize_IMU()
 
 
 def imu():
+    global initialized
+    if(initialized == False):
+        if (initialize() != -1):
+            f = open(c.IMU_LED_DIR + "/brightness", "w")
+            f.write("1")
+            initialized = True
     h.imu()

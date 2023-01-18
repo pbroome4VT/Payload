@@ -2,7 +2,7 @@
 
 #Author: Paul Broome
 #Date: 4/14/22
-#Desc: Interfaces with Adafruit Ultimate gps connected to Beaglebone UART1 (tx=p9.24 rx=p9.26)
+#Desc: Interfaces with Adafruit Ultimate gps connected to Beaglebone UART4
 
 
 
@@ -10,6 +10,7 @@
 from Gps import helper as h
 from Gps import constants as c
 
+initialized = False
 
 
 def get_latitude():
@@ -36,11 +37,13 @@ def get_hdop():
 def has_fix():
     return h.gpsHasFix
 
-def initialize():
-    h.initialize_environment()
-    h.initialize_GPS()
-    pass
+def is_connected():
+    return h.gpsConnected
+
+def is_initialized():
+    return h.gpsInitialized
+
+
 
 def gps():
     h.gps_helper()
-    #print("GPS called")
