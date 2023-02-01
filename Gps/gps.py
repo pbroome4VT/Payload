@@ -43,7 +43,9 @@ def is_connected():
 def is_initialized():
     return h.gpsInitialized
 
-
+def initialize():
+    h.initialize_environment()
+    h.initialize_GPS()
 
 def gps():
     h.gps_helper()

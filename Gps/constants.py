@@ -2,6 +2,10 @@ import os
 import time
 
 
+GPS_GPIO = "P8_22"
+GPS_BAUD_RATE = 9600
+GPS_UART = "UART4"
+GPS_PORT = "/dev/ttyS4"
 
 GPS_DIR = os.path.dirname(os.path.abspath(__file__))        #Gps module folder
 GPS_DATA_DIR = GPS_DIR + "/Data"                            #Folder to log Gps data

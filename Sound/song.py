@@ -9,9 +9,11 @@ class Song:
         self.loop = loop
         self.index = 0
         self.noteStartTime =  0
+        self.beginSong = False   #flag song song has been set to start
 
     def start(self):
         self.noteStartTime = time.time()
+        self.beginSong = True
         pass
 
     def set_index(self, newIndex):

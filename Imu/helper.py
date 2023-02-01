@@ -39,6 +39,9 @@ def write_register(register, bytes):
     data = spi.xfer2(bytes)
     return data
 
+def is_connected():
+    return GPIO.input(c.GPS_GPIO)
+
 def initialize_environment():
     #print("imu initialize_environment() called")
 
@@ -154,6 +157,18 @@ def record_accelerometer():
 
 
 def imu():
+    #if(is_connected()):
+    #    global imuInitialized
+    #    if(not imuInitialized):
+    #        if(initialize_IMU() != -1):
+    #            imuInitialized = True
+    #            f = open(c.IMU_LED_DIR + "/brightness", "w")
+    #            f.write("1")
+    #    else:
+    #        imuInitialized = False
+    #        f = open(c.IMU_LED_DIR + "/brightness", "w")
+    #        f.write("0")
+
     record_temperature()
     record_accelerometer()
     record_gyroscope()

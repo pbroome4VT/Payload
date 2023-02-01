@@ -23,6 +23,7 @@ def play_song(s):
     currSong = s
     songEn = 1
     currSong.start()
+    sound()
 
 def stop_song():
     global songEn
@@ -33,7 +34,13 @@ def sound():
     global songEn
     global currSong
     if(songEn):
-        changedNote = currSong.update()
+        changedNote = False
+        if (currSong.beginSong):
+            changedNote = True
+            currSong.beginSong = False
+        else:
+            changedNote = currSong.update()
+
         if(not currSong.song_over()):
             if(changedNote):
                 speaker.set_frequency(1)
