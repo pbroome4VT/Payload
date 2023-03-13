@@ -16,7 +16,10 @@ from Timer import timer
 TELEMETRY_DELTA_T = 3.0       #(seconds)  period at which data is transmitted
 SENSOR_DELTA_T = 2.0  
 STDOUT_DELTA_T = 10.0          #(second)   period at which data is output to console
-LOGFILE = "log.txt"
+
+LOG_FILE_TIMESTAMP = time.strftime("%b_%d_%H:%M:%S")
+LOG_DIRECTORY = "Logs"
+LOGFILE = LOG_DIRECTORY + "/log"+LOG_FILE_TIMESTAMP
 #-----------------------------------------------------------
 #global variables
 telemetryTimer = None
@@ -73,6 +76,8 @@ def setup():
     telemetryTimer = timer.Timer(TELEMETRY_DELTA_T)
     sensorTimer = timer.Timer(SENSOR_DELTA_T)
     stdoutTimer = timer.Timer(STDOUT_DELTA_T)
+    if(not os.path.exists("Logs")):
+        os.mkdir(LOG_DIRECTORY)
     logFile = open(LOGFILE, "w")
 
 
@@ -97,11 +102,11 @@ def fsm():
                 msg = "no fix: " + str(noFixCtr)
                 noFixCtr = noFixCtr + 1
             telemetry.transmit(msg)
-            print("SENT: " + msg)
+            log("SENT: " + msg)
             #send battery voltage
             msg = "battery voltage:  " + str(round(battery.get_voltage(), 3)) + "V"
             telemetry.transmit(msg)
-            print("SENT: " + msg)
+            log("SENT: " + msg)
             telemetryTimer.reset()
     if(sensorTimer.is_expired()):
         flash_led()
@@ -138,13 +143,17 @@ def run():
     while (not initialized):
         try:
             setup()
+            log("main initialized")
             time.sleep(1)
-            print("intializing sound")
+            log("intializing sound")
             sound.initialize()
-            print("initalizing battery")
+            log("sound initialized")
+            log("initalizing battery")
             battery.initialize()
-            print("initializing gps")
+            log("battery initialized")
+            log("initializing gps")
             gps.initialize()
+            log("gps initialized")
             initialized = True
         except:
             pass

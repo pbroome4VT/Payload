@@ -51,7 +51,7 @@ def initialize_environment():
     #create data direcory for logging if it doesnt already exist
     if(not os.path.exists(c.IMU_DATA_DIR)):
         imu_print("Imu.intiialize_environment() data directory doesnt exist")
-        imu_print("Ips.initialize_environment() creating Data directory")
+        imu_print("Imu.initialize_environment() creating Data directory")
         os.mkdir(c.IMU_DATA_DIR)
 
     #open each imu sensor data file

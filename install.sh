@@ -14,8 +14,7 @@ cd $PAYLOAD_DIR
 
 
 # make payload script and helper scripts executable
-chmod 775 "./payload.py" "./uninstall.sh"
-
+chmod 775 "./payload.py" "./uninstall.sh" "./Misc/clean.sh"
 
 # install python library dependencies
 pip3 install -r "$PAYLOAD_DIR/Misc/requirements.txt"

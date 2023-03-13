@@ -30,7 +30,7 @@ def initialize_telemetry():
         time.sleep(0.1)
         tranceiver.write(b"ATS4=30\r") #set register 4(tx power) to 30db
         time.sleep(0.1)
-        tranceiver.write(b"ATS2=2\r")
+        tranceiver.write(b"ATS2=64\r")
         time.sleep(0.1)
         tranceiver.write(b"AT&W\r") #write parameters
         time.sleep(0.1)
