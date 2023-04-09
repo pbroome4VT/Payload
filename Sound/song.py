@@ -13,6 +13,7 @@ class Song:
 
     def start(self):
         self.noteStartTime = time.time()
+        self.index = 0
         self.beginSong = True
         pass
 

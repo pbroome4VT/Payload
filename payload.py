@@ -12,14 +12,20 @@ from Sound import song
 from Sound.Speaker import speaker 
 from Timer import timer
 #----------------------------------------------------------
+#OPTIONS
+LOW_BATTERY_SAFETY_ENABLE = True      #if safety is enabled, beaglebone will beep on battery voltage below threshold1 and shutdown when below threshold2
+
 #constants
-TELEMETRY_DELTA_T = 3.0       #(seconds)  period at which data is transmitted
-SENSOR_DELTA_T = 2.0  
+TELEMETRY_DELTA_T = 2.0       #(seconds)  period at which data is transmitted
+SENSOR_DELTA_T = 1.0            #period at which sensors are queried
 STDOUT_DELTA_T = 10.0          #(second)   period at which data is output to console
 
 LOG_FILE_TIMESTAMP = time.strftime("%b_%d_%H:%M:%S")
 LOG_DIRECTORY = "Logs"
 LOGFILE = LOG_DIRECTORY + "/log"+LOG_FILE_TIMESTAMP
+
+LOW_BATTERY_THRESHOLD1 = 6.8
+LOW_BATTERY_THRESHOLD2 = -1
 #-----------------------------------------------------------
 #global variables
 telemetryTimer = None
@@ -90,21 +96,30 @@ def fsm():
     
     #print("FSM called")
     timer.Timer.update()    #update all timers
+    sound.sound()
     if(telemetryTimer.is_expired()):
         if(telemetry.is_initialized()):
             global noFixCtr
             msg = ""
-            #send gps coords
+            #send GPS data: "GPS:<lat> <lon> <alt>"
             if(gps.has_fix()):
                 noFixCtr = 0
                 msg = gps.get_position_str()
             else:
-                msg = "no fix: " + str(noFixCtr)
+                msg = "no fix " + str(noFixCtr)
                 noFixCtr = noFixCtr + 1
+            msg = "GPS:" + msg
             telemetry.transmit(msg)
             log("SENT: " + msg)
-            #send battery voltage
-            msg = "battery voltage:  " + str(round(battery.get_voltage(), 3)) + "V"
+            #send IMU data:  "IMU:<Acel_x> <Acel_y> <acel_z> <Dps_x> <Dps_y> <Dps_z> <temp>"
+            accel = imu.get_acceleration()
+            dps = imu.get_degrees_per_second()
+            temp = imu.get_temperature()
+            msg = "IMU:"+str(accel[0]) + " " +str(accel[1]) +" " + str(accel[2]) + " "+str(dps[0]) + " " + str(dps[1]) + " " + str(dps[2]) + " " + str(temp)
+            telemetry.transmit(msg)
+            log("SENT: " + msg)
+            #send battery data:  "BAT:<voltage>"
+            msg = "BAT:"+str(round(battery.get_voltage(), 3))
             telemetry.transmit(msg)
             log("SENT: " + msg)
             telemetryTimer.reset()
@@ -113,6 +128,11 @@ def fsm():
         gps.gps()
         imu.imu()
         telemetry.telemetry()
+        if(LOW_BATTERY_SAFETY_ENABLE):
+            bat = battery.get_voltage()
+            if(bat < LOW_BATTERY_THRESHOLD1):
+                print("beep")
+                sound.play_song(sound.beep)
         sensorTimer.reset()
     if(stdoutTimer.is_expired()):
         global stdoutNum
@@ -135,7 +155,6 @@ def fsm():
         log("------------------------------")
         stdoutNum = stdoutNum + 1
         stdoutTimer.reset()
-    sound.sound()
 
 def run():
     print("Run called")
