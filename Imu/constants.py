@@ -5,9 +5,7 @@ IMU_DIR = os.path.dirname(os.path.abspath(__file__))        #IMU module folder
 IMU_DATA_DIR = IMU_DIR + "/Data"                #folder to log imu data
 #files for logging data
 LOG_FILE_TIMESTAMP = time.strftime("%b_%d_%H:%M:%S")
-TEMPERATURE_FILE = IMU_DATA_DIR + "/temperature" + LOG_FILE_TIMESTAMP
-ACCELEROMETER_FILE = IMU_DATA_DIR + "/accelerometer" + LOG_FILE_TIMESTAMP
-GYROSCOPE_FILE = IMU_DATA_DIR + "/gyroscope" + LOG_FILE_TIMESTAMP
+DATA_FILE = IMU_DATA_DIR + "/data" + LOG_FILE_TIMESTAMP
 LOG_FILE = IMU_DIR + "/log"
 IMU_LED_DIR = "/sys/class/leds/beaglebone:green:usr2"
 

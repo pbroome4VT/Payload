@@ -7,9 +7,7 @@ import Imu.constants as c
 #------------------------------------------
 #files
 logFile = None
-temperatureFile = None
-accelerometerFile = None
-gyroscopeFile = None
+dataFile = None
 #-------------------------------------------
 #global vars
 spi = None      #spi interface object
@@ -23,9 +21,8 @@ currentXYZDPS = [0] * 3
 #--------------------------------------------------
 
 def imu_print(string):
-    print(string)
     timestamp = time.strftime("%b_%d_%H:%M:%S")
-    logFile.write(timestamp + "\t"+ string + "\n")
+    logFile.write(timestamp + "\t"+ string)
     logFile.flush()
 
 def read_register(register):
@@ -39,8 +36,6 @@ def write_register(register, bytes):
     data = spi.xfer2(bytes)
     return data
 
-def is_connected():
-    return GPIO.input(c.GPS_GPIO)
 
 def initialize_environment():
     #print("imu initialize_environment() called")
@@ -55,12 +50,9 @@ def initialize_environment():
         os.mkdir(c.IMU_DATA_DIR)
 
     #open each imu sensor data file
-    global temperatureFile
-    temperatureFile = open(c.TEMPERATURE_FILE, "w")
-    global accelerometerFile
-    accelerometerFile = open(c.ACCELEROMETER_FILE, "w")
-    global gyroscopeFile 
-    gyroscopeFile = open(c.GYROSCOPE_FILE, "w")
+    global dataFile
+    dataFile = open(c.DATA_FILE, "w")
+    
     #configure the imu status LED: Disable the trigger and turn off the led
     f = open(c.IMU_LED_DIR + "/trigger", "w")
     f.write("none")
@@ -103,10 +95,10 @@ def record_temperature():
     temperature = outTempHigh<<8 | outTempLow
     temperature = numpy.array([temperature], dtype=numpy.int16)     #convert to 16bit 2's compliment
     tempDegCelsius = c.TEMPERATURE_OFFSET + temperature[0]/c.TEMPERATURE_SENSITIVITY   #convert to celsius
-    temperatureFile.write(str(tempDegCelsius) + "\n")       #write temp data to file
+    dataFile.write(str(tempDegCelsius) +  " degrees celsius\n")       #write temp data to file
     global currentTemperature
     currentTemperature = tempDegCelsius
-    #imu_print(str(tempDegCelsius) +  " degrees celsius")    
+    #imu_print(str(tempDegCelsius) +  " degrees celsius\n")    
 
 
 def record_gyroscope():
@@ -127,10 +119,10 @@ def record_gyroscope():
     xyzGyroDPS = [0] * 3
     for i in range(0,2):
         xyzGyroDPS[i] = xyzGyro[i] * c.GYROSCOPE_SENSITIVITY_2000 / 1000
-    gyroscopeFile.write(str(xyzGyroDPS) + "\n")
+    dataFile.write(str(xyzGyroDPS) + "   deg/s <x,y,z>\n")
     global currentXYZDPS
     currentXYZDPS = xyzGyroDPS
-    #imu_print(str(xyzGyroDPS) + "   deg/s <x,y,z>")
+    #imu_print(str(xyzGyroDPS) + "   deg/s <x,y,z>\n")
 
 def record_accelerometer():
     #X axis accelerometer register data
@@ -150,25 +142,16 @@ def record_accelerometer():
     xyzAccelG = [0]*3
     for i in range(0,3):
         xyzAccelG[i] = xyzAccel[i] * c.ACCELEROMETER_SENSITIVTY_16 / 1000
-    accelerometerFile.write(str(xyzAccelG)+"\n")
+    dataFile.write(str(xyzAccelG)  + "  g's <x,y,z>\n")
     global currentXYZAcceleration
     currentXYZAcceleration = xyzAccelG
-    #imu_print(str(xyzAccelG)  + "      g's <x,y,z>")
+    #imu_print(str(xyzAccelG)  + "      g's <x,y,z>\n")
 
 
 def imu():
-    #if(is_connected()):
-    #    global imuInitialized
-    #    if(not imuInitialized):
-    #        if(initialize_IMU() != -1):
-    #            imuInitialized = True
-    #            f = open(c.IMU_LED_DIR + "/brightness", "w")
-    #            f.write("1")
-    #    else:
-    #        imuInitialized = False
-    #        f = open(c.IMU_LED_DIR + "/brightness", "w")
-    #        f.write("0")
-
+    timestamp = time.strftime("%b_%d_%H:%M:%S")
+    dataFile.write(timestamp + "\n")
     record_temperature()
     record_accelerometer()
     record_gyroscope()
+    dataFile.flush()

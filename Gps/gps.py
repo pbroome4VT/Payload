@@ -10,9 +10,16 @@
 from Gps import helper as h
 from Gps import constants as c
 
-initialized = False
 
+def initialize():
+    h.initialize_environment()
+    h.initialize_GPS()
 
+def gps():
+    h.gps_helper()
+
+def is_initialized():
+    return h.gpsInitialized
 def get_latitude():
     return h.currentLatitude
 def get_longitude():
@@ -32,20 +39,10 @@ def get_antenna_str():
     elif h.externalAntennaStatus == c.ANTENNA_EXTERNAL:
         msg = "external"
     return msg
+
 def get_hdop():
     return h.currentHDOP
+
 def has_fix():
     return h.gpsHasFix
 
-def is_connected():
-    return h.gpsConnected
-
-def is_initialized():
-    return h.gpsInitialized
-
-def initialize():
-    h.initialize_environment()
-    h.initialize_GPS()
-
-def gps():
-    h.gps_helper()

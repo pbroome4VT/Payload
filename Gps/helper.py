@@ -18,7 +18,6 @@ coordsFile = None           #logs parsed lattitude, longitude, and altitude data
 #--------------
 #global variables
 #general
-gpsConnected = False            #if gps is communicating with beaglebone....should stay true after startup
 gpsInitialized = False
 gps = None                      #serial gps object
 led = 0
@@ -43,17 +42,18 @@ currentHDOP = None
 #for SBAS and other satelites there are some offsets. long story short the gsv sentence outputs unique number between [1, 96] to identify satelite
 #this array will index these id's and leave index 0 as None
 spaceVehiclesData = [None] * 97
-numSpaceVehiclesVisible = 0
+numSpaceVehiclesVisible = -1
 #------------------------------------------------------------------------------------
 
 def log(string):
     timestamp = time.strftime("%b_%d_%H:%M:%S")
-    logFile.write(timestamp + "\t"+ string + "\n")
+    logFile.write(timestamp + "\t"+ string)
     logFile.flush()
+
 #prints to stdout and a log file
 def gps_print(string):
     log(string)
-    print(string)
+    print(string, end="")
     
 
 #function converts a string in "ddmm.mmmm..." to "ddd.ddddddd" format
@@ -82,8 +82,8 @@ def initialize_environment():
 
     #create data direcory for logging if it doesnt already exist
     if(not os.path.exists(c.GPS_DATA_DIR)):
-        gps_print("Gps.intiialize_environment() data directory doesnt exist")
-        gps_print("Gps.initialize_environment() creating Data directory")
+        gps_print("Gps.intiialize_environment() data directory doesnt exist\n")
+        gps_print("Gps.initialize_environment() creating Data directory\n")
         os.mkdir(c.GPS_DATA_DIR)
 
     #open each gps data file
@@ -92,25 +92,14 @@ def initialize_environment():
     rawFile = open(c.RAW_FILE, "w")
     coordsFile = open(c.COORDS_FILE, "w")
 
-    #os.system("config-pin p8.22 gpio_pd > /dev/null")
 
-
-def is_connected():
-    #return GPIO.input(c.GPS_GPIO)
-    
-    #if(send_gps("PMTK000","",2) == 0):
-    #    return True
-    #else:
-    #    return False
-    
-    return True
 
 def read_gps():
     try:
         rawString = gps.readline().decode("UTF-8")
         #if read a full message before timeout
         if (len(rawString) > 0) and (rawString[len(rawString) - 1] == "\n"):
-            rawFile.write("<"+rawString)
+            rawFile.write(">"+rawString)
             rawFile.flush()
             return rawString
     except Exception as e:
@@ -120,7 +109,8 @@ def read_gps():
 def flush_gps():
     while(read_gps() != ""):
         pass
-        
+
+#splits string at each comma and * character        
 def tokenize(rawString):
     return re.split(",|\*", rawString)     #use regexp to tokenize the raw string sentence
 
@@ -137,10 +127,12 @@ def command_checksum(commandStr):
     return hex(checksum)[2:]   #convert from integer to hex string clipping the leading "0x" of hex format
 
 #checks if the provided "ackStr" is an acknowledge response to the "cmdStr"
+#example
+# cmd token sent to gps [ $PMTK101, 32, <CR><LF> ] 
+# ackToken recieved from gps [ $PMTK001, 101, 0, 33, <CR><LF> ]
 def cmd_acknowledge(cmdTokens, ackTokens):
     status = -1
-    cmd = cmdTokens[0]
-    cmdNum = int(cmd[5:len(cmd)])
+    cmdNum = int( (cmdTokens[0])[5:] )
     if(len(ackTokens) == 4   and   ackTokens[0]=="$PMTK001"   and   int(ackTokens[1])==cmdNum):
         status = int(ackTokens[2])  #the result of the command
     else:
@@ -152,12 +144,11 @@ def cmd_acknowledge(cmdTokens, ackTokens):
 # dataStr is comma seperated list of data values for the command
 # acknowledge_flag is a flag to enable checking if command was successful
 #       0 for no acknowledge necessary
-#       1 for should acknowlowedge
-#       2 for must acknowledge
+#       1 for must acknowlowedge
 #returns an integer:
 #   -1 on error. for example if a command was supposed to be acknowledged and was not
 #   0 success
-def send_gps(commandStr, dataStr, acknowledge_flag):
+def send_gps(commandStr, dataStr, ack=False):
     #create the command to send to gps
     if(dataStr != ""):
         packet = commandStr + "," + dataStr
@@ -169,14 +160,12 @@ def send_gps(commandStr, dataStr, acknowledge_flag):
     #send the command
     gps.write(packet.encode())
     #log the sent message
-    rawFile.write(">" + packet)
+    rawFile.write("<" + packet)
     rawFile.flush()
     ret = 0
-    if(acknowledge_flag > 0):
-        gps.timeout= 0.05 #set 0.1 second timeout to ensure that so that we can obtain the acknowledge packet
-        if(acknowledge_flag == 2):
-             gps.timeout = 0.1  #increase read timeout to ensure we recieve the acknowledge packet
-        for attempt in range(0, 20): #check to see if one of the next 20 tx is acknowledgement packet 
+    if( ack == True ):
+        gps.timeout = 0.05  #increase read timeout of gps
+        for attempt in range(0, 99): #attempts 100 reads from gps to find acknowledge packet 
             response = read_gps()
             status = cmd_acknowledge(tokenize(packet), tokenize(response))
             if(status != -1):
@@ -192,8 +181,8 @@ def send_gps(commandStr, dataStr, acknowledge_flag):
             ret = -1
         elif(status == 3):
             log(commandStr + " ACKNOWLEDGED")
-            ret = 0
-    gps.timeout = c.READ_TIMEOUT 
+            ret = 1
+    gps.timeout = c.READ_TIMEOUT # set gps read timeout back to default
     return ret
     
 
@@ -207,16 +196,10 @@ def initialize_GPS():
     global gps
     gps = serial.Serial(port=c.GPS_PORT, baudrate=c.GPS_BAUD_RATE, timeout=c.READ_TIMEOUT, write_timeout=c.WRITE_TIMEOUT)
     if(gps.is_open):
-        status = send_gps("PMTK000", "", 2)
-        global gpsConnected
-        if(status != -1):
-            gpsConnected = True
-        else:
-            gpsConnected = False
-            return -1
-
+        status = send_gps("PMTK000", "", ack = True )
+       
         #PMTK_CMD_FULL_COLD_START
-        #resets gps to factor defaults
+        #resets gps to factory defaults
         commandStr = "PMTK104"
         dataStr = ""
         #gps_print(send_gps(commandStr, dataStr))
@@ -228,8 +211,9 @@ def initialize_GPS():
         #GSA : contains dilltution of precision -> info about position accuracy and helps determine "signal strength"
         #GSV : satelites in view + signal to noise ratio (SNR)
         commandStr = "PMTK314"
-        dataStr = "0,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0"
-        status = send_gps(commandStr, dataStr, 2)
+        #dataStr = "0,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0"
+        dataStr = "0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0"
+        status = send_gps(commandStr, dataStr, ack = True)
         if(status == -1):
             return status
 
@@ -237,7 +221,7 @@ def initialize_GPS():
         #set gps fix to update once every 1000ms
         commandStr = "PMTK300"
         dataStr = "1000,0,0,0,0"
-        status = send_gps(commandStr, dataStr, 2)
+        status = send_gps(commandStr, dataStr, ack = True)
         if(status == -1):
             return status
         
@@ -246,23 +230,25 @@ def initialize_GPS():
         #send data once every 1000ms
         commandStr = "PMTK220"
         dataStr = "1000"
-        status = send_gps(commandStr, dataStr, 2)
+        status = send_gps(commandStr, dataStr, ack = True)
         if(status == -1):
             return status
         
         #enable gps module output of internal/external antenna connection data
         commandStr = "PGCMD"
         dataStr = "33,1"
-        status = send_gps(commandStr, dataStr, 0)
+        status = send_gps(commandStr, dataStr, ack = False)
         if(status == -1):
             return status
 
         global gpsInitialized
         gpsInitialized = True
+        f = open(c.GPS_LED_DIR + "/brightness", "w")
+        f.write("1")
     else:
         log("Gps.intialize_GPS() serial connection FAILED")
         return -1
-    return 0
+    return 1
 
 def is_pmtk(rawTokens):
     return (len(rawTokens) > 0 and           #have at least one token 
@@ -290,7 +276,7 @@ def is_gsv(rawTokens):
     rawTokens[0][0:7] == "$GPGSV")
 
 def parse_pmtk(pmtkTokens):
-    gps_print(str(pmtkTokens))
+    gps_print(str(pmtkTokens)+"\n")
 
 def parse_pgtop(pgtopTokens):
     if(pgtopTokens[1] == "11"):
@@ -298,11 +284,11 @@ def parse_pgtop(pgtopTokens):
         global  externalAntennaStatus
         if(externalAntennaStatus != antennaStatus):
             if(antennaStatus == c.ANTENNA_SHORTED):
-                gps_print("ACTIVE ANTENNA IS SHORTED")
+                gps_print("ACTIVE ANTENNA IS SHORTED\n")
             elif(antennaStatus == c.ANTENNA_INTERNAL):
-                gps_print("SWITCH TO INTERNAL ANTENNA")
+                gps_print("SWITCH TO INTERNAL ANTENNA\n")
             elif(antennaStatus == c.ANTENNA_EXTERNAL):
-                gps_print("SWITCH TO EXTERNAL ANTENNA")
+                gps_print("SWITCH TO EXTERNAL ANTENNA\n")
         externalAntennaStatus = antennaStatus
             
 def parse_gga(gpggaTokens):
@@ -325,10 +311,8 @@ def parse_gga(gpggaTokens):
         currentAltitude = alt
         coordsFile.write(currentLatitude +  "," + currentLongitude + "," + currentAltitude + "\n")
         coordsFile.flush()
-        #gps_print(currentLatitude + ", " + currentLongitude + ", " + currentAltitude)
     else:
         gpsHasFix = False
-        #gps_print("Looking for fix")
 
 def parse_gsa(gpgsaTokens):
     mode1 = gpgsaTokens[1]
@@ -368,17 +352,6 @@ def parse_gsv(gpgsvTokens):
            
     
 def gps_helper():
-    if(is_connected()):
-        global gpsInitialized
-        if(not gpsInitialized):
-            if(initialize_GPS() != -1):
-                f = open(c.GPS_LED_DIR + "/brightness", "w")
-                f.write("1")
-    else:
-        gpsInitialized = False
-        f = open(c.GPS_LED_DIR + "/brightness", "w")
-        f.write("0")
-                
     while(1):
         rawString = read_gps()
         rawTokens = tokenize(rawString)
@@ -392,9 +365,8 @@ def gps_helper():
             parse_gsv(rawTokens)
         elif(is_pgtop(rawTokens)):
             parse_pgtop(rawTokens)
-        elif(len(rawTokens) > 0 and rawTokens[0] != ""):
-            #gps_print(str(rawTokens))
-            pass
+        elif( len(rawTokens) > 0 and rawTokens[0] != ''):
+            gps_print(str(rawTokens)+"\n")
         else:
             #break the loop if read timout occured
             break
